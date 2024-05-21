@@ -1,5 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const {ađdTransactionHistory} = require('../controller/TransactionHistory')
-router.route('/add').post(ađdTransactionHistory);
+const {addTransactionHistory} = require('../controller/TransactionHistory')
+router.route('/add').post(addTransactionHistory);
 module.exports = router;
