@@ -2,8 +2,7 @@ const express = require('express')
 const app = express();
 require('dotenv').config();
 const Moralis = require ('moralis').default;
-const port = process.env.PORT;
-const zRaceController = require('./controller/zRaceCoinController');
+const port = process.env.PORT ?? 8080;
 app.use(express.json());
 
 app.use('/api/auction',require('./routes/AuctionRoute'));
@@ -17,7 +16,6 @@ app.use((req, res, next) => {
     res.header('Pragma', 'no-cache');
     next();
   });
-zRaceController.onContractTransferListener();
 const startServer = async () => {
     await Moralis.start({
       apiKey: process.env.API,

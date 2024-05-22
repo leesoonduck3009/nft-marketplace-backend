@@ -1,10 +1,10 @@
 require('dotenv').config();
 const {db} = require('../config/FirebaseConfig')
-const {contractMarketplaceInstanceListener, contractMarketplaceCallContract} = require('../config/ContractWeb3Config')
 const { doc, collection, where, query, getDocs, limit, addDoc, setDoc, getDoc, updateDoc } = require('firebase/firestore')
 const {encrypt, decrypt} = require('../config/HashingData');
+const nftABI = require('../contract/ERC721ABI.json')
 const ethers = require('ethers');
-const {abiMarketplace,bscProvider, contractMarketplaceCallContract} = require('../config/ContractWeb3Config');
+const {contractMarketplaceInstanceListener, abiMarketplace,bscProvider, contractMarketplaceCallContract} = require('../config/ContractWeb3Config');
 const KEY_PRIVATE_HASH = process.env.KEY_PRIVATE_HASH
 const MARKETPLACE_ADDRESS = process.env.MARKETPLACE_ADDRESS;
 const FirebaseTable = require('../ultil/FirebaseTable');
@@ -12,13 +12,14 @@ const { default: Moralis } = require('moralis');
 const createAuction = async(req,res)=>{
     const data = req.body;
     try{
-
     // get private key
     const privateKey = await decodePrivateKey(data.accountId, data.sellerAddress);
     
     // create auction on block chain
     const signer = new ethers.Wallet(privateKey, bscProvider);
     const contractInstance = new ethers.Contract( MARKETPLACE_ADDRESS, abiMarketplace.abi,signer);
+    const contractNFTInstance = new ethers.Contract(data.nftAddress, nftABI,signer);
+    const respone =  await contractNFTInstance.setApprovalForAll(MARKETPLACE_ADDRESS, true);
     const auctionId = 0; // await contractInstance.startAuctionNFT(data.nftAddress, data.tokenId, data.price);
     
     // create auction on firebase
@@ -77,7 +78,7 @@ const cancelAuction = async(req,res)=>{
                 "chain": chain === 'BSC' ? "0x61": "0xaa36a7",
                 "address": data.owner
               });
-            if(coin >= (auction.price*0.2) ){
+            if(coin.balance >= (auction.price*0.2) ){
                 try{
                     const options = { value: ethers.parseEther(auction.price*0.21)};
                     await contractInstance.cancelAuctionFrom(auctionData.auctionId,options);
