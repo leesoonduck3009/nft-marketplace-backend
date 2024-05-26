@@ -2,13 +2,14 @@ const express = require('express')
 const app = express();
 require('dotenv').config();
 const Moralis = require ('moralis').default;
+const {listenMakeItem, listenBoughtItem} = require('./controller/MarkeplaceController')
 const port = process.env.PORT ?? 8080;
 app.use(express.json());
 
-app.use('/api/auction',require('./routes/AuctionRoute'));
+app.use('/api/marketplace',require('./routes/MarketplaceRoute'));
 app.use('/api/private-key',require('./routes/PrivateKeyRoute'));
 app.use('/api/wallet',require('./routes/WallerRoute'));
-app.use('/api/transaction-history',require('./routes/TransactionRoute'));
+app.use('/api/nft',require('./routes/NFTRoute'));
 
 app.use((req, res, next) => {
     res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -25,4 +26,6 @@ const startServer = async () => {
       console.log(`Example app listening on port ${port}`);
     });
   };
+  listenMakeItem();
+  listenBoughtItem();
   startServer();

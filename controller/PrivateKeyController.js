@@ -1,13 +1,15 @@
+require('dotenv').config;
 const { setDoc, collection, addDoc } = require('firebase/firestore');
-const {encrypt} = require('../config/HashingData')
+const {encrypt, decrypt} = require('../config/HashingData')
 const {db} = require('../config/FirebaseConfig');
 const FirebaseTable = require('../ultil/FirebaseTable');
+const KEY_PRIVATE_HASH = process.env.KEY_PRIVATE_HASH
 const addPrivateKeyToAccount = async(req,res)=>{
     try{
         const data = req.body;
-        const hashedPrivateKey = encrypt(data.privateKey);
+        const hashedPrivateKey = encrypt(data.privateKey,KEY_PRIVATE_HASH);
         const docRef = await addDoc(collection(db, FirebaseTable.PRIVATE_KEY), {
-            private_key: hashedPrivateKey,
+            privateKey: hashedPrivateKey,
             accountId: data.accountId,
             walletAddress: data.walletAddress
           });
@@ -19,4 +21,8 @@ const addPrivateKeyToAccount = async(req,res)=>{
     }
     
 }
-module.exports = {addPrivateKeyToAccount}
+const decrypPrivateKey = (req,res)=>{
+    const privatekey = decrypt(req.body.privateKey, KEY_PRIVATE_HASH);
+    res.json({data: privatekey})
+}
+module.exports = {addPrivateKeyToAccount,decrypPrivateKey}

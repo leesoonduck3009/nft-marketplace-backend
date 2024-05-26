@@ -1,6 +1,6 @@
 class FirebaseTable{
     static WALLET = 'wallet'
-    static AUCTION = 'auction'
+    static MARKETPLACE = 'marketplace'
     static PRIVATE_KEY = 'private_key'
     static TRANSACTION = 'transaction_history'
 }
