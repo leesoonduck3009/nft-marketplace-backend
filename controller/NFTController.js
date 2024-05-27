@@ -17,4 +17,21 @@ const getNFTOwnByProject = async(req,res)=>{
 
     }
 }
-module.exports = {getNFTOwnByProject}
+const getNFTOwnByWallet = async(req,res)=>{
+    try{
+        const wallet =req.params.id;
+        const response = await Moralis.EvmApi.nft.getWalletNFTs({
+            "chain": '0x61',
+            "format": "decimal",
+            "mediaItems": false,
+            "address": wallet
+          });
+        res.status(200).json({data: response.result.filter(item=>item.contractType==='ERC721'), error: null})
+    }
+    catch(e){
+        console.log(e);
+        res.status(500).json({data: null, error: "Server error"})
+
+    }
+}
+module.exports = {getNFTOwnByProject, getNFTOwnByWallet}

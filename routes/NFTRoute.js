@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {getNFTOwnByProject} = require('../controller/NFTController')
+const {getNFTOwnByProject, getNFTOwnByWallet} = require('../controller/NFTController')
 
 router.route("/get-balance").get(getNFTOwnByProject);
+router.route("/:id").get(getNFTOwnByWallet);
 
 module.exports = router;
