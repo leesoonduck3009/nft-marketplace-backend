@@ -26,17 +26,7 @@ const MakeAnItemInMarketplace = async(req,res)=>{
         await contractNFTInstance.setApprovalForAll(MARKETPLACE_ADDRESS, true);
     const marketplaceTradeId =  await contractMarketplaceInstance.makeItem(data.nftAddress,data.tokenId, data.price);
     // make a contract 
-    const docRef = await addDoc(collection(db,FirebaseTable.MARKETPLACE),{
-        price: data.price,
-        isSold: false,
-        isCancel: false,
-        nftAddress: data.nftAddress,
-        tokenId: data.tokenId,
-        itemId: -1,
-        seller: data.walletAddress,
-        buyer: null,
-        chain: data.chain
-    })
+
     res.status(200).json({data: "Success", error:null})
     }
     catch(e){
@@ -85,17 +75,17 @@ const PurchaseItem = async(req,res)=>{
 const listenMakeItem = async()=>{
     contractMarketplaceInstanceListener.addListener("Offered",async (itemId,nft,tokenId,price,seller)=>{
         try{
-            const q = query(collection(db,FirebaseTable.MARKETPLACE), where('isSold', "==", false), where("nftAddress", "==",nft), where('tokenId', "==", tokenId) )
-            const querySnapshot = await getDocs(q)
-            if (!querySnapshot.empty) {
-                const item = querySnapshot.docs[0];
-                await updateDoc(doc(db,FirebaseTable.MARKETPLACE,item.id),{
-                    itemId: itemId
-                })
-              } else {
-                console.log(querySnapshot.docs[0])
-                console.log("No matching documents.");
-              }
+            const docRef = await addDoc(collection(db,FirebaseTable.MARKETPLACE),{
+                price: price,
+                isSold: false,
+                isCancel: false,
+                nftAddress: nft,
+                tokenId: tokenId,
+                itemId: itemId,
+                seller: seller,
+                buyer: null,
+                chain: 'bsc'
+            })
         }
         catch(e){
             console.log("error: ", e);
@@ -137,6 +127,22 @@ const listenBoughtItem = ()=>{
         catch(e){
               console.log("error: ", e);
           }
+    })
+}
+const listenCancelItem = ()=>{
+    contractMarketplaceInstanceListener.addListener('Cancel', async(itemId,nft,tokenId,seller)=>{
+        const q = query(collection(db,FirebaseTable.MARKETPLACE), where('itemId', '==', itemId));
+        const querySnapshot = await getDocs(q)
+        if(!querySnapshot.empty){
+            const item = querySnapshot.docs[0];
+            await updateDoc(doc(db,FirebaseTable.MARKETPLACE,item.id),{
+                isCancel: true,
+                buyer: buyer
+            });
+        }
+        else{
+            console.log("No matching documents.");
+        }
     })
 }
 const decodePrivateKey = async(accountId,address)=>{
