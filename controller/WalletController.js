@@ -43,7 +43,6 @@ const getBalanceWallet = async(req,res)=>{
           return res.status(200).json({data: respone.jsonResponse.balance, error: null})
     }
     catch(e){
-        console.log(e);
         return res.status(500).json({data: null, error: "Server error"})
     }
 }
