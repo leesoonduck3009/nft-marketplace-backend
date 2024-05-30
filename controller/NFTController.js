@@ -40,7 +40,6 @@ const getNFTOwnByProject = async(req,res)=>{
     catch(e){
         console.log(e);
         res.status(500).json({data: null, error: "Server error"})
-
     }
 }
 const getNFTOwnByWallet = async(req,res)=>{
@@ -57,7 +56,6 @@ const getNFTOwnByWallet = async(req,res)=>{
     catch(e){
         console.log(e);
         res.status(500).json({data: null, error: "Server error"})
-
     }
 }
 const getHello = (req,res)=>{

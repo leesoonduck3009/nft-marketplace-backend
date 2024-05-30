@@ -19,11 +19,9 @@ const createWallet = async(req,res) =>{
                 chain: data.chain,
                 numOfCoin: respone.jsonResponse.balance
                 });
-            return res.status(200).json({data: "Success", error: null})
         }
-        else{
-            res.status(409).json({error: "already exist"})
-        }
+        return res.status(200).json({data: "Success", error: null})
+
     }
     catch(e){
         console.log("error: ", e);
