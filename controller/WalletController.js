@@ -1,8 +1,12 @@
+require('dotenv').config();
+const ethers = require('ethers');
 const FirebaseTable = require("../ultil/FirebaseTable");
 const {db} = require('../config/FirebaseConfig');
-const { setDoc, doc, getDoc, updateDoc } = require("firebase/firestore");
+const { setDoc, doc, getDoc, updateDoc, query, collection, where, limit ,getDocs} = require("firebase/firestore");
 const { default: Moralis } = require('moralis');
-
+const {decrypt} = require('../config/HashingData');
+const API_BSC_BLOCKCHAIN = process.env.API_BSC_BLOCKCHAIN;
+const KEY_PRIVATE_HASH = process.env.KEY_PRIVATE_HASH
 const createWallet = async(req,res) =>{
     try{
         const data =req.body;
@@ -44,4 +48,54 @@ const getBalanceWallet = async(req,res)=>{
         return res.status(500).json({data: null, error: "Server error"})
     }
 }
-module.exports = {createWallet,getBalanceWallet}
+const TransferCoin = async(req, res)=>{
+    try{
+    // get PrivateKey
+    const data = req.body;
+    const privateKey = await decodePrivateKey(data.accountId, data.from);
+    const bscProvider = new ethers.JsonRpcProvider(API_BSC_BLOCKCHAIN);
+    const wallet = new ethers.Wallet(privateKey, bscProvider);
+    const tx = {
+        to: data.to,
+        value: data.amount
+    }
+    await wallet.sendTransaction(tx);
+    // update data respone from
+    const responeFrom = await Moralis.EvmApi.balance.getNativeBalance({
+        "chain":  "0x61",
+        "address": data.from
+      });
+    await updateDoc(doc(db, FirebaseTable.WALLET, data.from), {
+        numOfCoin: responeFrom.jsonResponse.balance
+      });
+    // update data respone to
+    const responeTo = await Moralis.EvmApi.balance.getNativeBalance({
+        "chain":   "0x61",
+        "address": data.to
+    });
+    console.log(responeTo.jsonResponse.balance);
+    console.log(responeFrom.jsonResponse.balance);
+
+    await updateDoc(doc(db, FirebaseTable.WALLET, data.to), {
+            numOfCoin: responeTo.jsonResponse.balance
+        });
+    res.status(200).json({data: "Success", error: null});
+    }
+    catch(e){
+        console.log(e);
+        res.status(500).json({data: null, error: "Transfer coin failed"});
+    }
+}
+const decodePrivateKey = async(accountId,address)=>{
+    const q = query(collection(db, FirebaseTable.PRIVATE_KEY), where('accountId', '==', accountId), where('walletAddress', '==', address), limit(1));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        console.log('No matching documents.');
+      }
+    const dataPrivateKeyRes = querySnapshot.docs[0].data();
+    console.log(dataPrivateKeyRes)
+    // decode private key
+    const privateKey = decrypt(dataPrivateKeyRes.privateKey,KEY_PRIVATE_HASH);
+    return privateKey;
+}
+module.exports = {createWallet,getBalanceWallet,TransferCoin}
