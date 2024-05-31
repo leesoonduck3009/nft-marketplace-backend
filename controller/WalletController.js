@@ -39,6 +39,7 @@ const getBalanceWallet = async(req,res)=>{
             "chain": data.chain === 'bsc' ?  "0x61": '0xaa36a7',
             "address": data.address
           });
+        console.log('hello')
         const docRef = await updateDoc(doc(db, FirebaseTable.WALLET, data.address), {
             numOfCoin: respone.jsonResponse.balance
           });
@@ -52,12 +53,15 @@ const TransferCoin = async(req, res)=>{
     try{
     // get PrivateKey
     const data = req.body;
+    console.log(data.amount);
     const privateKey = await decodePrivateKey(data.accountId, data.from);
     const bscProvider = new ethers.JsonRpcProvider(API_BSC_BLOCKCHAIN);
     const wallet = new ethers.Wallet(privateKey, bscProvider);
+    console.log(typeof data.amount);
+    const amountInWei = ethers.parseEther(data.amount);
     const tx = {
         to: data.to,
-        value: data.amount
+        value: amountInWei
     }
     await wallet.sendTransaction(tx);
     // update data respone from
